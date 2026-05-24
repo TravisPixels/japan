@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Japan Picks — Tokyo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f4f0; }
+  header { background: #fff; border-bottom: 1px solid #e5e5e0; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 1000; }
+  h1 { font-size: 17px; font-weight: 600; color: #1a1a1a; letter-spacing: -0.3px; }
+  .subtitle { font-size: 12px; color: #888; margin-top: 1px; }
+  .filter-bar { display: flex; gap: 7px; flex-wrap: wrap; padding: 10px 16px; background: #fff; border-bottom: 1px solid #e5e5e0; }
+  .filter-btn { padding: 5px 13px; border-radius: 20px; border: 1.5px solid; font-size: 12px; font-weight: 500; cursor: pointer; background: transparent; transition: all 0.15s; white-space: nowrap; }
+  .filter-btn[data-type="All"] { border-color: #888; color: #888; }
+  .filter-btn[data-type="All"].active { background: #888; color: #fff; }
+  .filter-btn[data-type="Drinks"] { border-color: #534AB7; color: #534AB7; }
+  .filter-btn[data-type="Drinks"].active { background: #534AB7; color: #fff; }
+  .filter-btn[data-type="Noodles"] { border-color: #0F6E56; color: #0F6E56; }
+  .filter-btn[data-type="Noodles"].active { background: #0F6E56; color: #fff; }
+  .status-bar { font-size: 12px; color: #888; padding: 6px 16px; background: #f5f4f0; }
+  #map { height: calc(100vh - 130px); width: 100%; }
+  .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+  .leaflet-popup-content { margin: 12px 14px; }
+  .popup-name { font-weight: 600; font-size: 14px; color: #1a1a1a; margin-bottom: 6px; }
+  .popup-type { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
+  .popup-type.Drinks { background: #EEEDFE; color: #534AB7; }
+  .popup-type.Noodles { background: #E1F5EE; color: #0F6E56; }
+  .popup-row { font-size: 12px; color: #555; margin: 3px 0; line-height: 1.5; }
+  .popup-row b { color: #333; }
+  .popup-link { display: inline-block; margin-top: 8px; font-size: 12px; color: #534AB7; text-decoration: none; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Japan Picks</h1>
+  <div class="subtitle">Tokyo</div>
+</header>
+
+<div class="filter-bar">
+  <button class="filter-btn active" data-type="All">All</button>
+  <button class="filter-btn" data-type="Drinks">🍹 Drinks</button>
+  <button class="filter-btn" data-type="Noodles">🍜 Noodles</button>
+</div>
+
+<div class="status-bar" id="status">Loading...</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSMvnlVip8wkjc0QtA7f_uzhqIWoLTpPjE-eOHVqkE0FP3mzFQM0JxUrjNBX_dt2lnXgEYBNJsI9TkV/pub?gid=0&single=true&output=csv';
+const ACTIVE_TYPES = ['Drinks', 'Noodles'];
+const COLORS = { Drinks: '#534AB7', Noodles: '#0F6E56' };
+
+const map = L.map('map', { worldCopyJump: true }).setView([35.6762, 139.6503], 12);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
+  maxZoom: 19
+}).addTo(map);
+
+let allMarkers = [];
+
+function makeIcon(type) {
+  const color = COLORS[type] || '#888';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36">
+    <path d="M14 0C6.27 0 0 6.27 0 14c0 9.33 14 22 14 22S28 23.33 28 14C28 6.27 21.73 0 14 0z" fill="${color}"/>
+    <circle cx="14" cy="14" r="6" fill="white"/>
+  </svg>`;
+  return L.divIcon({ html: svg, className: '', iconSize: [28,36], iconAnchor: [14,36], popupAnchor: [0,-36] });
+}
+
+function makePopup(r) {
+  return `
+    <div class="popup-name">${r.name}</div>
+    <span class="popup-type ${r.type}">${r.type}</span>
+    ${r.hours ? `<div class="popup-row"><b>Hours:</b> ${r.hours}</div>` : ''}
+    ${r.notes ? `<div class="popup-row"><b>Notes:</b> ${r.notes}</div>` : ''}
+    ${r.link ? `<a class="popup-link" href="${r.link}" target="_blank">View link ↗</a>` : ''}
+  `;
+}
+
+function updateFilter(type) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  allMarkers.forEach(({marker, type: t}) => {
+    if (type === 'All' || type === t) map.addLayer(marker);
+    else map.removeLayer(marker);
+  });
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => updateFilter(btn.dataset.type));
+});
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = []; let cur = '', inQ = false;
+    for (const ch of lines[i]) {
+      if (ch === '"') inQ = !inQ;
+      else if (ch === ',' && !inQ) { cols.push(cur.trim().replace(/^"|"$/g, '')); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim().replace(/^"|"$/g, ''));
+    if (cols[0] && cols[0] !== 'NAME') {
+      rows.push({
+        name:   cols[0],
+        type:   cols[1],
+        location: cols[2],
+        coords: cols[3],
+        hours:  cols[4] || '',
+        address: cols[5] || '',
+        notes:  cols[6] || '',
+        link:   cols[7] || ''
+      });
+    }
+  }
+  return rows;
+}
+
+let locationDot = null, locationRing = null;
+
+function placeOrMoveDot(lat, lng) {
+  if (locationDot) {
+    locationDot.setLatLng([lat, lng]);
+    locationRing.setLatLng([lat, lng]);
+  } else {
+    locationRing = L.circleMarker([lat, lng], {
+      radius: 20, fillColor: '#4A90E2', fillOpacity: 0.15, color: '#4A90E2', weight: 1
+    }).addTo(map);
+    locationDot = L.circleMarker([lat, lng], {
+      radius: 10, fillColor: '#4A90E2', fillOpacity: 1, color: '#fff', weight: 3
+    }).addTo(map).bindPopup('You are here');
+  }
+}
+
+function locateUser() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    pos => placeOrMoveDot(pos.coords.latitude, pos.coords.longitude),
+    null,
+    { enableHighAccuracy: true }
+  );
+  navigator.geolocation.watchPosition(
+    pos => placeOrMoveDot(pos.coords.latitude, pos.coords.longitude),
+    null,
+    { enableHighAccuracy: true }
+  );
+}
+
+locateUser();
+
+async function loadData() {
+  try {
+    const res = await fetch(SHEET_URL);
+    if (!res.ok) throw new Error();
+    const text = await res.text();
+    const rows = parseCSV(text).filter(r => ACTIVE_TYPES.includes(r.type) && r.coords);
+
+    let loaded = 0;
+    for (const row of rows) {
+      const parts = row.coords.split(',');
+      if (parts.length !== 2) continue;
+      const lat = parseFloat(parts[0].trim());
+      const lng = parseFloat(parts[1].trim());
+      if (isNaN(lat) || isNaN(lng)) continue;
+
+      const marker = L.marker([lat, lng], { icon: makeIcon(row.type) })
+        .bindPopup(makePopup(row), { maxWidth: 260 });
+      marker.addTo(map);
+      allMarkers.push({ marker, type: row.type });
+      loaded++;
+    }
+
+    document.getElementById('status').textContent = `${loaded} location${loaded !== 1 ? 's' : ''} loaded. Tap any pin for details.`;
+  } catch(e) {
+    document.getElementById('status').textContent = 'Error loading sheet — make sure it is published to web as CSV.';
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>
