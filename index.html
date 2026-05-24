@@ -283,22 +283,26 @@ function makePopup(r) {
     }
 
     const todayHours = result[todayIdx] || '—';
+    const allHoursExceptToday = DAYS.map((day, i) => {
+      if (i === todayIdx) return null;
+      if (result[i] === null) return null;
+      const t = result[i] === 'CLOSED' || result[i].toLowerCase() === 'closed' ? 'CLOSED' : result[i];
+      return `<span style="font-weight:600">${day.toUpperCase()}</span> ${t}`;
+    }).filter(Boolean).join('<br>');
+
     hoursSection = `
       <div class="popup-hours-today" onclick="var el=document.getElementById('h-${id}');var arr=document.getElementById('arr-${id}');var open=el.style.display==='block';el.style.display=open?'none':'block';arr.textContent=open?'▾':'▴';">
         <span>${todayDay}</span>&nbsp;${todayHours}
         <span class="arrow" id="arr-${id}">▾</span>
       </div>
-      <div class="popup-hours-all" id="h-${id}">${allHours}</div>`;
+      <div class="popup-hours-all" id="h-${id}">${allHoursExceptToday}</div>`;
   }
 
   return `
     <div class="popup-name">${r.name}</div>
     <span class="popup-type">${r.type}</span>
     ${hoursSection}
-    ${r.notes ? `
-      <div><button class="popup-toggle notes" onclick="var el=document.getElementById('n-${id}');el.style.display=el.style.display==='block'?'none':'block'">Notes</button></div>
-      <div class="popup-notes" id="n-${id}">${r.notes}</div>
-    ` : ''}
+    ${r.notes ? `<div class="popup-row" style="margin-top:6px">${r.notes}</div>` : ''}
     ${r.link ? `<a class="popup-link" href="${r.link}" target="_blank">View link ↗</a>` : ''}
     <div class="dir-buttons">
       <a href="${gMapsUrl}" target="_blank" class="dir-btn google">Google Maps</a>
