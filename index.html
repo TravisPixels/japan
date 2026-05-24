@@ -15,7 +15,7 @@
 
   .filter-section { background: #fff; border-bottom: 1px solid #e5e5e0; padding: 10px 16px; position: sticky; top: 53px; z-index: 999; }
   .group-row { display: flex; gap: 7px; flex-wrap: wrap; }
-  .sub-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0ec; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .sub-row { display: flex; gap: 6px; flex-wrap: nowrap; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0ec; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .sub-row::-webkit-scrollbar { display: none; }
   .sub-row.hidden { display: none; }
 
@@ -368,8 +368,11 @@ async function loadData() {
     } catch(e) {}
   }
   document.getElementById('status').textContent = `${totalLoaded} location${totalLoaded !== 1 ? 's' : ''} loaded. Select a category to explore.`;
+  refreshMarkers();
 }
 
+document.querySelector('.group-btn[data-group="all"]').classList.add('active');
+activeGroup = 'all';
 loadData();
 </script>
 </body>
