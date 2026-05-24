@@ -72,12 +72,20 @@ function makeIcon(type) {
 }
 
 function makePopup(r) {
+  const parts = r.coords.split(',');
+  const lat = parts[0].trim(), lng = parts[1].trim();
+  const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  const aMapsUrl = `https://maps.apple.com/?daddr=${lat},${lng}`;
   return `
     <div class="popup-name">${r.name}</div>
     <span class="popup-type ${r.type}">${r.type}</span>
     ${r.hours ? `<div class="popup-row"><b>Hours:</b> ${r.hours}</div>` : ''}
     ${r.notes ? `<div class="popup-row"><b>Notes:</b> ${r.notes}</div>` : ''}
     ${r.link ? `<a class="popup-link" href="${r.link}" target="_blank">View link ↗</a>` : ''}
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <a href="${gMapsUrl}" target="_blank" style="flex:1;text-align:center;padding:6px 0;font-size:12px;font-weight:500;background:#EEEDFE;color:#534AB7;border-radius:6px;text-decoration:none;">Google Maps</a>
+      <a href="${aMapsUrl}" target="_blank" style="flex:1;text-align:center;padding:6px 0;font-size:12px;font-weight:500;background:#E1F5EE;color:#0F6E56;border-radius:6px;text-decoration:none;">Apple Maps</a>
+    </div>
   `;
 }
 
