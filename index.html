@@ -138,7 +138,16 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSMvnlVip8wkjc0QtA7f_uzhqIWoLTpPjE-eOHVqkE0FP3mzFQM0JxUrjNBX_dt2lnXgEYBNJsI9TkV/pub?gid=0&single=true&output=csv';
+const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSMvnlVip8wkjc0QtA7f_uzhqIWoLTpPjE-eOHVqkE0FP3mzFQM0JxUrjNBX_dt2lnXgEYBNJsI9TkV/pub?output=csv&gid=';
+const SHEETS = [
+  { name: 'Tokyo',     gid: '0' },
+  { name: 'Kyoto',     gid: '1748242203' },
+  { name: 'Osaka',     gid: '1776834839' },
+  { name: 'Kamakura',  gid: '1170421930' },
+  { name: 'Enoshima',  gid: '1589673722' },
+  { name: 'Hakone',    gid: '332853555' },
+  { name: 'Odawara',   gid: '401512297' },
+];
 
 const GROUPS = {
   food: ['Beer','Cocktails','Drinks','Café/Kissaten','Izakaya','Sushi','Yakitori','Noodles','Sweets','Bakery','Pizza','Street Food'],
@@ -334,28 +343,27 @@ function locateUser() {
 locateUser();
 
 async function loadData() {
-  try {
-    const res = await fetch(SHEET_URL);
-    if (!res.ok) throw new Error();
-    const text = await res.text();
-    const rows = parseCSV(text).filter(r => ALL_TYPES.includes(r.type) && r.coords);
-
-    let loaded = 0;
-    for (const row of rows) {
-      const parts = row.coords.split(',');
-      if (parts.length !== 2) continue;
-      const lat = parseFloat(parts[0].trim());
-      const lng = parseFloat(parts[1].trim());
-      if (isNaN(lat) || isNaN(lng)) continue;
-      const marker = L.marker([lat, lng], { icon: makeIcon(row.type) })
-        .bindPopup(makePopup(row), { maxWidth: 260 });
-      allMarkers.push({ marker, type: row.type });
-      loaded++;
-    }
-    document.getElementById('status').textContent = `${loaded} location${loaded !== 1 ? 's' : ''} loaded. Select a category to explore.`;
-  } catch(e) {
-    document.getElementById('status').textContent = 'Error loading sheet — make sure it is published to web as CSV.';
+  let totalLoaded = 0;
+  for (const sheet of SHEETS) {
+    try {
+      const res = await fetch(BASE_URL + sheet.gid);
+      if (!res.ok) continue;
+      const text = await res.text();
+      const rows = parseCSV(text).filter(r => ALL_TYPES.includes(r.type) && r.coords);
+      for (const row of rows) {
+        const parts = row.coords.split(',');
+        if (parts.length !== 2) continue;
+        const lat = parseFloat(parts[0].trim());
+        const lng = parseFloat(parts[1].trim());
+        if (isNaN(lat) || isNaN(lng)) continue;
+        const marker = L.marker([lat, lng], { icon: makeIcon(row.type) })
+          .bindPopup(makePopup(row), { maxWidth: 260 });
+        allMarkers.push({ marker, type: row.type });
+        totalLoaded++;
+      }
+    } catch(e) {}
   }
+  document.getElementById('status').textContent = `${totalLoaded} location${totalLoaded !== 1 ? 's' : ''} loaded. Select a category to explore.`;
 }
 
 loadData();
