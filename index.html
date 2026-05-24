@@ -81,9 +81,11 @@
   .popup-name { font-weight: 600; font-size: 14px; color: #1a1a1a; margin-bottom: 4px; }
   .popup-type { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; background: #f0f0ec; color: #555; }
   .popup-toggle { display: inline-block; padding: 5px 12px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; border: none; text-align: left; margin: 4px 0; }
-  .popup-toggle.hours { background: #d6eaf2; color: #8db8c9; }
   .popup-toggle.notes { background: #e8e8e8; color: #666; }
-  .popup-hours { font-size: 11px; color: #444; margin: 4px 0 6px; line-height: 1.8; display: none; }
+  .popup-hours-today { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #444; margin: 6px 0 2px; cursor: pointer; padding: 4px 0; }
+  .popup-hours-today span { font-weight: 600; }
+  .popup-hours-today .arrow { font-size: 14px; color: #8db8c9; margin-left: 6px; }
+  .popup-hours-all { font-size: 11px; color: #444; margin: 2px 0 6px; line-height: 1.8; display: none; border-top: 1px solid #f0f0ec; padding-top: 4px; }
   .popup-notes { font-size: 12px; color: #555; margin: 4px 0 6px; line-height: 1.5; display: none; }
   .popup-row { font-size: 12px; color: #555; margin: 3px 0; line-height: 1.5; }
   .popup-row b { color: #333; }
@@ -218,7 +220,7 @@ function parseHours(hoursStr) {
     if (!match) continue;
     const startDay = match[1].toLowerCase().slice(0,3);
     const endDay = match[2] ? match[2].toLowerCase().slice(0,3) : null;
-    const time = match[3].trim().toUpperCase() === 'CLOSED' ? 'CLOSED' : match[3].trim();
+    const time = match[3].trim().toUpperCase() === 'CLOSED' ? 'CLOSED' : match[3].trim().replace(/([0-9])(am|pm)/gi, (m, n, p) => n + p.toUpperCase());
     const startIdx = DAY_INDEX[startDay];
     const endIdx = endDay ? DAY_INDEX[endDay] : startIdx;
     if (startIdx === undefined) continue;
@@ -239,20 +241,60 @@ function parseHours(hoursStr) {
   }).filter(Boolean).join('<br>');
 }
 
+function getTodayIndex() {
+  const d = new Date().getDay();
+  return d === 0 ? 6 : d - 1;
+}
+
 function makePopup(r) {
   const parts = r.coords.split(',');
   const lat = parts[0].trim(), lng = parts[1].trim();
   const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
   const aMapsUrl = `https://maps.apple.com/?daddr=${lat},${lng}`;
-  const hoursHtml = parseHours(r.hours);
   const id = Math.random().toString(36).slice(2, 8);
+
+  let hoursSection = '';
+  if (r.hours) {
+    const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const allHours = parseHours(r.hours);
+    const todayIdx = getTodayIndex();
+    const todayDay = DAYS[todayIdx].toUpperCase();
+
+    const DAY_INDEX = { mon:0, tue:1, wed:2, thu:3, fri:4, sat:5, sun:6 };
+    const result = new Array(7).fill(null);
+    const segments = r.hours.split(',').map(s => s.trim()).filter(Boolean);
+    for (const seg of segments) {
+      const match = seg.match(/^([a-zA-Z]+)(?:-([a-zA-Z]+))?\s+(.+)$/i);
+      if (!match) continue;
+      const startDay = match[1].toLowerCase().slice(0,3);
+      const endDay = match[2] ? match[2].toLowerCase().slice(0,3) : null;
+      const time = match[3].trim().toUpperCase() === 'CLOSED' ? 'CLOSED' : match[3].trim().replace(/([0-9])(am|pm)/gi, (m, n, p) => n + p.toUpperCase());
+      const startIdx = DAY_INDEX[startDay];
+      const endIdx = endDay ? DAY_INDEX[endDay] : startIdx;
+      if (startIdx === undefined) continue;
+      if (endIdx !== undefined && endIdx >= startIdx) {
+        for (let i = startIdx; i <= endIdx; i++) result[i] = time;
+      } else if (endIdx !== undefined) {
+        for (let i = startIdx; i < 7; i++) result[i] = time;
+        for (let i = 0; i <= endIdx; i++) result[i] = time;
+      } else {
+        result[startIdx] = time;
+      }
+    }
+
+    const todayHours = result[todayIdx] || '—';
+    hoursSection = `
+      <div class="popup-hours-today" onclick="var el=document.getElementById('h-${id}');var arr=document.getElementById('arr-${id}');var open=el.style.display==='block';el.style.display=open?'none':'block';arr.textContent=open?'▾':'▴';">
+        <span>${todayDay}</span>&nbsp;${todayHours}
+        <span class="arrow" id="arr-${id}">▾</span>
+      </div>
+      <div class="popup-hours-all" id="h-${id}">${allHours}</div>`;
+  }
+
   return `
     <div class="popup-name">${r.name}</div>
     <span class="popup-type">${r.type}</span>
-    ${hoursHtml ? `
-      <div><button class="popup-toggle hours" onclick="var el=document.getElementById('h-${id}');el.style.display=el.style.display==='block'?'none':'block'">Hours</button></div>
-      <div class="popup-hours" id="h-${id}">${hoursHtml}</div>
-    ` : ''}
+    ${hoursSection}
     ${r.notes ? `
       <div><button class="popup-toggle notes" onclick="var el=document.getElementById('n-${id}');el.style.display=el.style.display==='block'?'none':'block'">Notes</button></div>
       <div class="popup-notes" id="n-${id}">${r.notes}</div>
