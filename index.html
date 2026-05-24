@@ -249,8 +249,9 @@ function getTodayIndex() {
 function makePopup(r) {
   const parts = r.coords.split(',');
   const lat = parts[0].trim(), lng = parts[1].trim();
-  const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-  const aMapsUrl = `https://maps.apple.com/?daddr=${lat},${lng}`;
+  const destination = r.address ? encodeURIComponent(r.address) : `${lat},${lng}`;
+  const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+  const aMapsUrl = `https://maps.apple.com/?daddr=${destination}`;
   const id = Math.random().toString(36).slice(2, 8);
 
   let hoursSection = '';
