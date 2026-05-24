@@ -80,8 +80,7 @@
   .leaflet-popup-content { margin: 12px 14px; }
   .popup-name { font-weight: 600; font-size: 14px; color: #1a1a1a; margin-bottom: 4px; }
   .popup-type { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; background: #f0f0ec; color: #555; }
-  .popup-hours { font-size: 11px; color: #444; margin: 6px 0; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; line-height: 1.8; }
-  .popup-hours::-webkit-scrollbar { display: none; }
+  .popup-hours { font-size: 11px; color: #444; margin: 6px 0; line-height: 1.8; }
   .popup-row { font-size: 12px; color: #555; margin: 3px 0; line-height: 1.5; }
   .popup-row b { color: #333; }
   .popup-link { display: inline-block; margin-top: 8px; font-size: 12px; color: #534AB7; text-decoration: none; font-weight: 500; }
@@ -233,7 +232,7 @@ function parseHours(hoursStr) {
     if (result[i] === null) return null;
     const t = result[i] === 'CLOSED' || result[i].toLowerCase() === 'closed' ? 'CLOSED' : result[i];
     return `<span style="font-weight:600">${day.toUpperCase()}</span> ${t}`;
-  }).filter(Boolean).join(' <span style="color:#ccc">|</span> ');
+  }).filter(Boolean).join('<br>');
 }
 
 function makePopup(r) {
