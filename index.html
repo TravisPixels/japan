@@ -249,7 +249,7 @@ function getTodayIndex() {
 function makePopup(r) {
   const parts = r.coords.split(',');
   const lat = parts[0].trim(), lng = parts[1].trim();
-  const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  const gMapsUrl = r.mapsLink || `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
   const id = Math.random().toString(36).slice(2, 8);
 
   let hoursSection = '';
@@ -304,7 +304,7 @@ function makePopup(r) {
     ${r.notes ? `<div class="popup-row" style="margin-top:6px">${r.notes}</div>` : ''}
     ${r.link ? `<a class="popup-link" href="${r.link}" target="_blank">View link ↗</a>` : ''}
     <div class="dir-buttons">
-      <a href="${gMapsUrl}" target="_blank" class="dir-btn google">Google Maps</a>
+      <a href="${gMapsUrl}" target="_blank" class="dir-btn google">Open in Maps</a>
     </div>`;
 }
 
@@ -399,7 +399,8 @@ function parseCSV(text) {
     if (cols[0] && cols[0] !== 'NAME') {
       rows.push({
         name: cols[0], type: cols[1], location: cols[2], coords: cols[3],
-        hours: cols[4]||'', address: cols[5]||'', notes: cols[6]||'', link: cols[7]||''
+        mapsLink: cols[4]||'', hours: cols[5]||'', notes: cols[6]||'',
+        link: cols[7]||'', address: cols[8]||''
       });
     }
   }
