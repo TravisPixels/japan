@@ -19,6 +19,8 @@
   .filter-btn[data-type="Drinks"].active { background: #534AB7; color: #fff; }
   .filter-btn[data-type="Noodles"] { border-color: #0F6E56; color: #0F6E56; }
   .filter-btn[data-type="Noodles"].active { background: #0F6E56; color: #fff; }
+  .filter-btn[data-type="Food"] { border-color: #A32D2D; color: #A32D2D; }
+  .filter-btn[data-type="Food"].active { background: #A32D2D; color: #fff; }
   .status-bar { font-size: 12px; color: #888; padding: 6px 16px; background: #f5f4f0; }
   #map { height: calc(100vh - 130px); width: 100%; }
   .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
@@ -27,6 +29,7 @@
   .popup-type { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
   .popup-type.Drinks { background: #EEEDFE; color: #534AB7; }
   .popup-type.Noodles { background: #E1F5EE; color: #0F6E56; }
+  .popup-type.Food { background: #FCEBEB; color: #A32D2D; }
   .popup-row { font-size: 12px; color: #555; margin: 3px 0; line-height: 1.5; }
   .popup-row b { color: #333; }
   .popup-link { display: inline-block; margin-top: 8px; font-size: 12px; color: #534AB7; text-decoration: none; font-weight: 500; }
@@ -43,6 +46,7 @@
   <button class="filter-btn active" data-type="All">All</button>
   <button class="filter-btn" data-type="Drinks">🍹 Drinks</button>
   <button class="filter-btn" data-type="Noodles">🍜 Noodles</button>
+  <button class="filter-btn" data-type="Food">🍽️ Food</button>
 </div>
 
 <div class="status-bar" id="status">Loading...</div>
@@ -51,8 +55,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSMvnlVip8wkjc0QtA7f_uzhqIWoLTpPjE-eOHVqkE0FP3mzFQM0JxUrjNBX_dt2lnXgEYBNJsI9TkV/pub?gid=0&single=true&output=csv';
-const ACTIVE_TYPES = ['Drinks', 'Noodles'];
-const COLORS = { Drinks: '#534AB7', Noodles: '#0F6E56' };
+const ACTIVE_TYPES = ['Drinks', 'Noodles', 'Food'];
+const COLORS = { Drinks: '#534AB7', Noodles: '#0F6E56', Food: '#A32D2D' };
 
 const map = L.map('map', { worldCopyJump: true }).setView([35.6762, 139.6503], 12);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
