@@ -249,8 +249,7 @@ function getTodayIndex() {
 function makePopup(r) {
   const parts = r.coords.split(',');
   const lat = parts[0].trim(), lng = parts[1].trim();
-  const destination = r.address ? encodeURIComponent(r.address) : `${lat},${lng}`;
-  const gMapsUrl = r.mapsLink || `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+  const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
   const id = Math.random().toString(36).slice(2, 8);
 
   let hoursSection = '';
@@ -400,8 +399,7 @@ function parseCSV(text) {
     if (cols[0] && cols[0] !== 'NAME') {
       rows.push({
         name: cols[0], type: cols[1], location: cols[2], coords: cols[3],
-        mapsLink: cols[4] || '', hours: cols[5]||'', address: cols[6]||'',
-        notes: cols[7]||'', link: cols[8]||''
+        hours: cols[4]||'', address: cols[5]||'', notes: cols[6]||'', link: cols[7]||''
       });
     }
   }
