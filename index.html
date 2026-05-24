@@ -80,6 +80,8 @@
   .leaflet-popup-content { margin: 12px 14px; }
   .popup-name { font-weight: 600; font-size: 14px; color: #1a1a1a; margin-bottom: 4px; }
   .popup-type { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; background: #f0f0ec; color: #555; }
+  .popup-hours { font-size: 11px; color: #444; margin: 6px 0; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; line-height: 1.8; }
+  .popup-hours::-webkit-scrollbar { display: none; }
   .popup-row { font-size: 12px; color: #555; margin: 3px 0; line-height: 1.5; }
   .popup-row b { color: #333; }
   .popup-link { display: inline-block; margin-top: 8px; font-size: 12px; color: #534AB7; text-decoration: none; font-weight: 500; }
@@ -201,15 +203,49 @@ function makeIcon(type) {
   return L.divIcon({ html, className: '', iconSize: [32,40], iconAnchor: [16,40], popupAnchor: [0,-40] });
 }
 
+function parseHours(hoursStr) {
+  if (!hoursStr) return '';
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const DAY_INDEX = { mon:0, tue:1, wed:2, thu:3, fri:4, sat:5, sun:6 };
+  const result = new Array(7).fill(null);
+
+  const segments = hoursStr.split(',').map(s => s.trim()).filter(Boolean);
+  for (const seg of segments) {
+    const match = seg.match(/^([a-zA-Z]+)(?:-([a-zA-Z]+))?\s+(.+)$/i);
+    if (!match) continue;
+    const startDay = match[1].toLowerCase().slice(0,3);
+    const endDay = match[2] ? match[2].toLowerCase().slice(0,3) : null;
+    const time = match[3].trim().toUpperCase() === 'CLOSED' ? 'CLOSED' : match[3].trim();
+    const startIdx = DAY_INDEX[startDay];
+    const endIdx = endDay ? DAY_INDEX[endDay] : startIdx;
+    if (startIdx === undefined) continue;
+    if (endIdx !== undefined && endIdx >= startIdx) {
+      for (let i = startIdx; i <= endIdx; i++) result[i] = time;
+    } else if (endIdx !== undefined) {
+      for (let i = startIdx; i < 7; i++) result[i] = time;
+      for (let i = 0; i <= endIdx; i++) result[i] = time;
+    } else {
+      result[startIdx] = time;
+    }
+  }
+
+  return DAYS.map((day, i) => {
+    if (result[i] === null) return null;
+    const t = result[i] === 'CLOSED' || result[i].toLowerCase() === 'closed' ? 'CLOSED' : result[i];
+    return `<span style="font-weight:600">${day.toUpperCase()}</span> ${t}`;
+  }).filter(Boolean).join(' <span style="color:#ccc">|</span> ');
+}
+
 function makePopup(r) {
   const parts = r.coords.split(',');
   const lat = parts[0].trim(), lng = parts[1].trim();
   const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
   const aMapsUrl = `https://maps.apple.com/?daddr=${lat},${lng}`;
+  const hoursHtml = parseHours(r.hours);
   return `
     <div class="popup-name">${r.name}</div>
     <span class="popup-type">${r.type}</span>
-    ${r.hours ? `<div class="popup-row"><b>Hours:</b> ${r.hours}</div>` : ''}
+    ${hoursHtml ? `<div class="popup-hours">${hoursHtml}</div>` : ''}
     ${r.notes ? `<div class="popup-row"><b>Notes:</b> ${r.notes}</div>` : ''}
     ${r.link ? `<a class="popup-link" href="${r.link}" target="_blank">View link ↗</a>` : ''}
     <div class="dir-buttons">
