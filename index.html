@@ -35,8 +35,8 @@
   /* Food subcategory colors */
   .sub-btn[data-type="Drinks"] { border-color: #4068b1; color: #4068b1; }
   .sub-btn[data-type="Drinks"].active { background: #4068b1; color: #fff; }
-  .sub-btn[data-type="Beer"] { border-color: #df7a26; color: #df7a26; }
-  .sub-btn[data-type="Beer"].active { background: #df7a26; color: #fff; }
+  .sub-btn[data-type="Beer"] { border-color: #d87216; color: #d87216; }
+  .sub-btn[data-type="Beer"].active { background: #d87216; color: #fff; }
   .sub-btn[data-type="Cocktails"] { border-color: #9156a2; color: #9156a2; }
   .sub-btn[data-type="Cocktails"].active { background: #9156a2; color: #fff; }
   .sub-btn[data-type="Café/Kissaten"] { border-color: #502c17; color: #502c17; }
@@ -63,6 +63,8 @@
   /* Attractions subcategory colors */
   .sub-btn[data-type="Shopping"] { border-color: #f3b422; color: #f3b422; }
   .sub-btn[data-type="Shopping"].active { background: #f3b422; color: #fff; }
+  .sub-btn[data-type="Market"] { border-color: #ffa015; color: #ffa015; }
+  .sub-btn[data-type="Market"].active { background: #ffa015; color: #fff; }
   .sub-btn[data-type="Photo Spot"] { border-color: #3d3d3d; color: #3d3d3d; }
   .sub-btn[data-type="Photo Spot"].active { background: #3d3d3d; color: #fff; }
   .sub-btn[data-type="Museum"] { border-color: #c8a7cf; color: #c8a7cf; }
@@ -136,6 +138,7 @@
 
   <div class="sub-row hidden" id="sub-attractions">
     <button class="sub-btn" data-type="Shopping"><span class="material-symbols-rounded">shopping_bag</span> Shopping</button>
+    <button class="sub-btn" data-type="Market"><span class="material-symbols-rounded">storefront</span> Market</button>
     <button class="sub-btn" data-type="Photo Spot"><span class="material-symbols-rounded">photo_camera</span> Photo Spot</button>
     <button class="sub-btn" data-type="Museum"><span class="material-symbols-rounded">museum</span> Museum</button>
     <button class="sub-btn" data-type="Temple/Shrine"><span class="material-symbols-rounded">temple_buddhist</span> Temple/Shrine</button>
@@ -163,18 +166,18 @@ const SHEETS = [
 
 const GROUPS = {
   food: ['Beer','Cocktails','Drinks','Café/Kissaten','Izakaya','Sushi','Yakitori','Noodles','Sweets','Bakery','Pizza','Street Food','Restaurant'],
-  attractions: ['Museum','Park','Temple/Shrine','Shopping','Photo Spot','Nature']
+  attractions: ['Museum','Park','Temple/Shrine','Shopping','Market','Photo Spot','Nature']
 };
 
 const ALL_TYPES = [...GROUPS.food, ...GROUPS.attractions];
 
 const COLORS = {
-  Beer: '#df7a26', Cocktails: '#9156a2', Drinks: '#4068b1',
+  Beer: '#d87216', Cocktails: '#9156a2', Drinks: '#4068b1',
   'Café/Kissaten': '#502c17', Izakaya: '#931a1d', Sushi: '#73bbd8',
   Yakitori: '#ee265e', Noodles: '#d1bb9b', Sweets: '#f59db6',
   Bakery: '#8d562f', Pizza: '#fbb166', 'Street Food': '#c65474', Restaurant: '#213f7c',
   Museum: '#c8a7cf', Park: '#8ec965', 'Temple/Shrine': '#df3e26',
-  Shopping: '#f3b422', 'Photo Spot': '#3d3d3d', Nature: '#2d7a3c'
+  Shopping: '#f3b422', 'Photo Spot': '#3d3d3d', Nature: '#2d7a3c', Market: '#ffa015'
 };
 
 const ICONS = {
@@ -183,7 +186,7 @@ const ICONS = {
   Yakitori: 'yakitori', Noodles: 'ramen_dining', Sweets: 'cookie',
   Bakery: 'bakery_dining', Pizza: 'local_pizza', 'Street Food': 'hanami_dango', Restaurant: 'dinner_dining',
   Museum: 'museum', Park: 'park', 'Temple/Shrine': 'temple_buddhist',
-  Shopping: 'shopping_bag', 'Photo Spot': 'photo_camera', Nature: 'landscape'
+  Shopping: 'shopping_bag', 'Photo Spot': 'photo_camera', Nature: 'landscape', Market: 'storefront'
 };
 
 const map = L.map('map', { worldCopyJump: true }).setView([35.6762, 139.6503], 12);
