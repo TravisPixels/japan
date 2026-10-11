@@ -191,9 +191,9 @@ const ICONS = {
 };
 
 const map = L.map('map', { worldCopyJump: true }).setView([35.6762, 139.6503], 12);
-L.tileLayer('https://tiles.openfreemap.org/styles/liberty/{z}/{x}/{y}.png', {
-  attribution: '© <a href="https://openfreemap.org">OpenFreeMap</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  maxZoom: 20
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: '© <a href="https://www.esri.com/">Esri</a>',
+  maxZoom: 16
 }).addTo(map);
 
 let allMarkers = [];
